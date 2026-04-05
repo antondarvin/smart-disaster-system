@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import os
 from pathlib import Path
-from .routes import api_bp, init_network
+from routes import api_bp, init_network
 
 app = Flask(__name__)
 CORS(app)
@@ -29,3 +29,7 @@ def home():
 
 # Expose app for Vercel
 # (The handler function is not strictly needed for Flask on Vercel)
+
+if __name__ == '__main__':
+    print("Starting Smart Disaster Response Routing System API...")
+    app.run(host='127.0.0.1', port=5000, debug=True)

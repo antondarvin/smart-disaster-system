@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from .graph_utils import DisasterNetwork
+from graph_utils import DisasterNetwork
 
 api_bp = Blueprint('api', __name__)
 network = None
