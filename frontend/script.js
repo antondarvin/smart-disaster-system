@@ -1,5 +1,6 @@
 // Configuration
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
+const API_BASE_URL = isLocal ? 'http://127.0.0.1:5000/api' : '/api';
 
 // Map Initialization
 const map = L.map('map').setView([37.7760, -122.4080], 14);
