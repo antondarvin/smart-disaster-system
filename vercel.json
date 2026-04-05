@@ -5,6 +5,10 @@
       "src": "api/index.py",
       "use": "@vercel/python",
       "config": { "includeFiles": ["api/*.csv"] }
+    },
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
     }
   ],
   "rewrites": [
