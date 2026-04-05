@@ -1,4 +1,4 @@
-import pandas as pd
+import csv
 import networkx as nx
 import random
 
@@ -27,33 +27,34 @@ class DisasterNetwork:
         self.edges_file = edges_file
         self.nodes_file = nodes_file
         self.graph = nx.Graph()
-        self.nodes_df = pd.DataFrame()
-        self.edges_df = pd.DataFrame()
         self.load_data()
 
     def load_data(self):
-        """Loads nodes and edges from CSV files and builds the graph."""
-        self.nodes_df = pd.read_csv(self.nodes_file)
-        self.edges_df = pd.read_csv(self.edges_file)
-        self._build_graph()
-
-    def _build_graph(self):
+        """Loads nodes and edges from CSV files and builds the graph using built-in csv module."""
         self.graph.clear()
         
-        # Add nodes
-        for _, row in self.nodes_df.iterrows():
-            self.graph.add_node(row['node_id'], lat=row['lat'], lng=row['lng'])
+        # Load Nodes
+        with open(self.nodes_file, mode='r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                self.graph.add_node(
+                    row['node_id'], 
+                    lat=float(row['lat']), 
+                    lng=float(row['lng'])
+                )
             
-        # Add edges
-        for _, row in self.edges_df.iterrows():
-            self.graph.add_edge(
-                row['source_node'], 
-                row['destination_node'], 
-                distance=float(row['distance']),
-                condition=row['condition'],
-                risk_level=row['risk_level'],
-                terrain=row['terrain']
-            )
+        # Load Edges
+        with open(self.edges_file, mode='r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                self.graph.add_edge(
+                    row['source_node'], 
+                    row['destination_node'], 
+                    distance=float(row['distance']),
+                    condition=row['condition'],
+                    risk_level=row['risk_level'],
+                    terrain=row['terrain']
+                )
 
     def calculate_edge_cost(self, u, v, vehicle_type):
         """Calculates the cost of an edge based on disaster conditions and vehicle capability."""
@@ -143,14 +144,11 @@ class DisasterNetwork:
         
         updates = []
         
-        # We update the dataframe and rebuild the graph
-        for idx in self.edges_df.index:
+        # Iterate through graph edges to update conditions
+        for u, v in self.graph.edges():
             # Randomly worsen condition for a subset of edges
             if random.random() < 0.3: # 30% chance to change
                 new_cond = random.choices(conditions, weights=weights)[0]
-                self.edges_df.at[idx, 'condition'] = new_cond
-                u = self.edges_df.at[idx, 'source_node']
-                v = self.edges_df.at[idx, 'destination_node']
                 self.graph[u][v]['condition'] = new_cond
                 updates.append({"source": u, "target": v, "new_condition": new_cond})
                 
