@@ -1,58 +1,46 @@
 from flask import Blueprint, jsonify, request
-from graph_utils import DisasterNetwork
+from .graph_utils import DisasterNetwork
 
-# Create blueprint
 api_bp = Blueprint('api', __name__)
-
-# Initialize network structure globally
 network = None
 
 def init_network(edges_path, nodes_path):
     global network
-    network = DisasterNetwork(edges_path, nodes_path)
-    # Ensure graph is built successfully
-    network._build_graph()
+    if network is None:
+        network = DisasterNetwork(edges_path, nodes_path)
 
 @api_bp.route('/load-data', methods=['GET'])
 def load_data():
-    """Loads dataset and returns nodes and edges."""
     if not network:
-        return jsonify({"error": "Network not initialized"}), 500
-        
-    nodes = network.get_all_nodes()
-    edges = network.get_all_edges()
-    
-    return jsonify({
-        "nodes": nodes,
-        "edges": edges,
-        "message": "Data loaded successfully"
-    })
+        return jsonify({"error": "Network data file not found on server"}), 500
+    try:
+        return jsonify({
+            "nodes": network.get_all_nodes(),
+            "edges": network.get_all_edges(),
+            "message": "Data loaded successfully"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @api_bp.route('/get-route', methods=['POST'])
 def get_route():
-    """Calculates the safest route based on vehicle capabilities."""
+    if not network: return jsonify({"error": "Server error: Network not ready"}), 500
     data = request.json
     source = data.get('source')
     target = data.get('target')
-    vehicle = data.get('vehicle', 'Rescue Truck') # default vehicle
+    vehicle = data.get('vehicle', 'Rescue Truck')
     
     if not source or not target:
         return jsonify({"error": "Source and target are required"}), 400
         
-    result = network.get_safest_route(source, target, vehicle)
-    return jsonify(result)
+    return jsonify(network.get_safest_route(source, target, vehicle))
 
 @api_bp.route('/simulate', methods=['POST'])
 def simulate():
-    """Simulates a disaster by randomly changing road conditions."""
-    if not network:
-        return jsonify({"error": "Network not initialized"}), 500
-        
+    if not network: return jsonify({"error": "Server error: Network not ready"}), 500
     result = network.simulate_disaster()
-    # Return new state representation
-    edges = network.get_all_edges()
     return jsonify({
         "message": result["message"],
         "updates": result["updates"],
-        "edges": edges
+        "edges": network.get_all_edges()
     })

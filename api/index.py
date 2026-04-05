@@ -1,31 +1,31 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 import os
-from routes import api_bp, init_network
+from pathlib import Path
+from .routes import api_bp, init_network
 
 app = Flask(__name__)
-# Enable CORS for all routes (important for frontend requests)
 CORS(app)
 
-# Setup directories
-backend_dir = os.path.dirname(os.path.abspath(__file__))
+# Use Pathlib for robust directory handling in Serverless
+BASE_DIR = Path(__file__).resolve().parent
 
-# Register endpoints blueprint
+# Registration
 app.register_blueprint(api_bp, url_prefix='/api')
 
-# --- Backend Network Initialization ---
-edges_path = os.path.join(backend_dir, 'dataset.csv')
-nodes_path = os.path.join(backend_dir, 'nodes.csv')
-init_network(edges_path, nodes_path)
+# Initialize network structure globally
+edges_path = str(BASE_DIR / 'dataset.csv')
+nodes_path = str(BASE_DIR / 'nodes.csv')
+
+# Pre-initialize or handle it lazily
+try:
+    init_network(edges_path, nodes_path)
+except Exception as e:
+    print(f"FAILED TO INITIALIZE NETWORK: {e}")
 
 @app.route("/")
 def home():
     return jsonify({"message": "Backend working!"})
 
-# IMPORTANT for Vercel
-def handler(request):
-    return app(request.environ, lambda *args: None)
-
-if __name__ == '__main__':
-    print("Starting Smart Disaster Response Routing System API...")
-    app.run(host='127.0.0.1', port=5000, debug=True)
+# Expose app for Vercel
+# (The handler function is not strictly needed for Flask on Vercel)
