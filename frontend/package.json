@@ -1,0 +1,7 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node -e \"const fs = require('fs'); if (!fs.existsSync('dist')) fs.mkdirSync('dist'); ['index.html', 'script.js', 'style.css'].forEach(f => fs.copyFileSync(f, 'dist/' + f))\""
+  }
+}
